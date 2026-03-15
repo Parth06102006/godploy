@@ -43,7 +43,7 @@ func (h *AuthHandler) AuthUser(c *echo.Context) error {
 	u, ok := c.Get(h.Server.Config.EchoCtxUserKey).(lib.AuthUser)
 
 	if !ok {
-		exists, err := h.Server.DB.Queries.AdminExists(h.Ctx)
+		exists, err := h.Server.DB.Queries.AdminExists(h.qCtx)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Internal Sever Error"})
 		}
@@ -75,7 +75,7 @@ func (h *AuthHandler) AppRegiter(c *echo.Context) error {
 	query := h.Server.DB.Queries
 
 	// check if admin user already exists
-	if exist, err := query.AdminExists(h.Ctx); err != nil {
+	if exist, err := query.AdminExists(h.qCtx); err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Internal Server Error"})
 	} else if exist {
 		return c.JSON(http.StatusBadRequest, lib.Res{Message: "Admin User Already Exists"})
@@ -89,7 +89,7 @@ func (h *AuthHandler) AppRegiter(c *echo.Context) error {
 	}
 
 	// create organization first (user needs orgId at insert time)
-	orgId, err := query.CreateOrg(h.Ctx, db.CreateOrgParams{
+	orgId, err := query.CreateOrg(h.qCtx, db.CreateOrgParams{
 		ID:   lib.NewID(),
 		Name: b.OrgName,
 	})
@@ -98,7 +98,7 @@ func (h *AuthHandler) AppRegiter(c *echo.Context) error {
 	}
 
 	// register new admin user
-	uId, err := query.CreateUser(h.Ctx, db.CreateUserParams{
+	uId, err := query.CreateUser(h.qCtx, db.CreateUserParams{
 		ID:           lib.NewID(),
 		Name:         b.Name,
 		Email:        b.Email,
@@ -111,7 +111,7 @@ func (h *AuthHandler) AppRegiter(c *echo.Context) error {
 	}
 
 	// link user with organization
-	if err := query.LinkUserNOrg(h.Ctx, db.LinkUserNOrgParams{
+	if err := query.LinkUserNOrg(h.qCtx, db.LinkUserNOrgParams{
 		UserEmail:      b.Email,
 		OrganizationID: orgId,
 	}); err != nil {
@@ -143,7 +143,7 @@ func (h *AuthHandler) AppLogin(c *echo.Context) error {
 	}
 
 	// get the user
-	u, err := h.Server.DB.Queries.GetUserByEmail(h.Ctx, b.Email)
+	u, err := h.Server.DB.Queries.GetUserByEmail(h.qCtx, b.Email)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, lib.Res{Message: "user not found"})
 	}

@@ -39,7 +39,7 @@ func (h *ServiceHandler) CreatePsqlService(c *echo.Context) error {
 	// service name to be unique
 	b.AppName += lib.GenerateRandomID(6)
 
-	service, err := h.Server.DB.Queries.CreatePsqlService(h.Ctx, db.CreatePsqlServiceParams{
+	service, err := h.Server.DB.Queries.CreatePsqlService(h.qCtx, db.CreatePsqlServiceParams{
 		ID:          lib.NewID(),
 		ProjectID:   b.ProjectID,
 		ServiceID:   "",
@@ -72,14 +72,14 @@ func (h *ServiceHandler) DeployPsqlService(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 
-	service, err := query.GetPsqlServiceById(h.Ctx, b.ServiceId)
+	service, err := query.GetPsqlServiceById(h.qCtx, b.ServiceId)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, lib.Res{Message: "service not found"})
 	}
 
 	// create a volume for the service
 	vlName := service.AppName + "_pgdata"
-	docker.VolumeCreate(h.Ctx, client.VolumeCreateOptions{
+	docker.VolumeCreate(h.qCtx, client.VolumeCreateOptions{
 		Name:   vlName,
 		Driver: "local",
 	})
@@ -126,16 +126,16 @@ func (h *ServiceHandler) DeployPsqlService(c *echo.Context) error {
 	}
 
 	// depoly the service
-	sRes, err := docker.ServiceCreate(h.Ctx, spec)
+	sRes, err := docker.ServiceCreate(h.qCtx, spec)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to deploy service"})
 	}
 
 	// update the service ID
-	if err := query.SetPsqlServiceId(h.Ctx, db.SetPsqlServiceIdParams{
+	if err := query.SetPsqlServiceId(h.qCtx, db.SetPsqlServiceIdParams{
 		ServiceID: sRes.ID,
 	}); err != nil {
-		docker.ServiceRemove(h.Ctx, sRes.ID, client.ServiceRemoveOptions{})
+		docker.ServiceRemove(h.qCtx, sRes.ID, client.ServiceRemoveOptions{})
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to update service with service id"})
 	}
 
@@ -157,12 +157,12 @@ func (h *ServiceHandler) StopPsqlService(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 
-	service, err := query.GetPsqlServiceById(h.Ctx, b.ServiceId)
+	service, err := query.GetPsqlServiceById(h.qCtx, b.ServiceId)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, lib.Res{Message: "service not found"})
 	}
 
-	if _, err := docker.ServiceRemove(h.Ctx, service.ServiceID, client.ServiceRemoveOptions{}); err != nil {
+	if _, err := docker.ServiceRemove(h.qCtx, service.ServiceID, client.ServiceRemoveOptions{}); err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "error removing service"})
 	}
 
@@ -182,19 +182,19 @@ func (h *ServiceHandler) DeletePsqlService(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 
-	service, err := query.GetPsqlServiceById(h.Ctx, b.ServiceId)
+	service, err := query.GetPsqlServiceById(h.qCtx, b.ServiceId)
 	if err != nil {
 		return c.JSON(http.StatusConflict, lib.Res{Message: "Failed to fetch service details"})
 	}
 
 	// check and stop the service if it is running
-	if s, _ := docker.ServiceInspect(h.Ctx, service.ServiceID, client.ServiceInspectOptions{}); s.Service.ID != "" {
-		if _, err := docker.ServiceRemove(h.Ctx, service.ServiceID, client.ServiceRemoveOptions{}); err != nil {
+	if s, _ := docker.ServiceInspect(h.qCtx, service.ServiceID, client.ServiceInspectOptions{}); s.Service.ID != "" {
+		if _, err := docker.ServiceRemove(h.qCtx, service.ServiceID, client.ServiceRemoveOptions{}); err != nil {
 			return c.JSON(http.StatusInternalServerError, lib.Res{Message: fmt.Sprintln("error removing service :", err)})
 		}
 	}
 
-	if err := query.DeletePsqlService(h.Ctx, b.ServiceId); err != nil {
+	if err := query.DeletePsqlService(h.qCtx, b.ServiceId); err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to create service"})
 	}
 

@@ -10,7 +10,7 @@ import (
 func (h *ProjectHandler) GetOrg(c *echo.Context) error {
 	u := c.Get(h.Server.Config.EchoCtxUserKey).(lib.AuthUser)
 
-	orgs, err := h.Server.DB.Queries.GetAllOrg(h.Ctx, u.Email)
+	orgs, err := h.Server.DB.Queries.GetAllOrg(h.qCtx, u.Email)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{
 			Message: "internal server error",

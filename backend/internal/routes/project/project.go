@@ -54,7 +54,7 @@ func (h *ProjectHandler) CreateProject(c *echo.Context) error {
 	}
 
 	// check if project already exists
-	if exist, err := q.CheckProjectExist(h.Ctx, db.CheckProjectExistParams{
+	if exist, err := q.CheckProjectExist(h.qCtx, db.CheckProjectExistParams{
 		OrgID:       b.OrgID,
 		ProjectName: b.Name,
 	}); err != nil {
@@ -63,7 +63,7 @@ func (h *ProjectHandler) CreateProject(c *echo.Context) error {
 		return c.JSON(http.StatusConflict, lib.Res{Message: fmt.Sprintf("project with name %s already exists ", b.Name)})
 	}
 
-	p, err := q.CreateProject(h.Ctx, db.CreateProjectParams{
+	p, err := q.CreateProject(h.qCtx, db.CreateProjectParams{
 		ID:    lib.NewID(),
 		Name:  b.Name,
 		OrgID: b.OrgID,
@@ -94,7 +94,7 @@ func (h *ProjectHandler) GetProjects(c *echo.Context) error {
 		return c.JSON(status, Res)
 	}
 
-	p, err := q.GetAllProjects(h.Ctx, orgId)
+	p, err := q.GetAllProjects(h.qCtx, orgId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get project"})
 	}
@@ -113,13 +113,13 @@ func (h *ProjectHandler) DeleteProject(c *echo.Context) error {
 	}
 
 	// check if other service exists
-	if has, err := h.Server.DB.Queries.CheckProjectHasServices(h.Ctx, b.ID); err != nil {
+	if has, err := h.Server.DB.Queries.CheckProjectHasServices(h.qCtx, b.ID); err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to delete project"})
 	} else if has {
 		return c.JSON(http.StatusConflict, lib.Res{Message: "Project has services associated with it. Please delete the services first."})
 	}
 
-	err := h.Server.DB.Queries.DeleteProject(h.Ctx, b.ID)
+	err := h.Server.DB.Queries.DeleteProject(h.qCtx, b.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to delete project"})
 	}

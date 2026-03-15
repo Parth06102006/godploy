@@ -10,13 +10,13 @@ import (
 type AuthHandler struct {
 	Server   *config.Server
 	Validate *validator.Validate
-	Ctx      context.Context
+	qCtx     context.Context
 }
 
 func InitAuthHandlers(s *config.Server) *AuthHandler {
 	return &AuthHandler{
 		Server:   s,
 		Validate: validator.New(),
-		Ctx:      context.Background(),
+		qCtx:      context.Background(),
 	}
 }

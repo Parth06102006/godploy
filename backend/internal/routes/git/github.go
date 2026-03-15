@@ -64,7 +64,7 @@ const githubManifestFormTmpl = `<!DOCTYPE html>
 </html>`
 
 // initiate github app creation
-// 
+//
 // route: GET /api/provider/github/app/create
 func (h *GitHandler) CreateGithubApp(c *echo.Context) error {
 	q := h.Server.DB.Queries
@@ -75,12 +75,12 @@ func (h *GitHandler) CreateGithubApp(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to create github app"})
 	}
 
-	user, err := q.GetUserByEmail(h.Ctx, u.Email)
+	user, err := q.GetUserByEmail(h.qCtx, u.Email)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to create github app"})
 	}
 
-	if err := q.CreateRedirectSession(h.Ctx, db.CreateRedirectSessionParams{
+	if err := q.CreateRedirectSession(h.qCtx, db.CreateRedirectSessionParams{
 		State:     state,
 		OrgID:     user.CurrentOrgID,
 		UserID:    user.ID,
@@ -110,14 +110,7 @@ func (h *GitHandler) CreateGithubApp(c *echo.Context) error {
 	return c.HTML(http.StatusOK, buf.String())
 }
 
-// remove the session data
-func removeSession(query *db.Queries, state string) {
-	if err := query.DeleteRedirectSession(context.Background(), state); err != nil {
-		fmt.Println("Error deleting redirect session:", err)
-	}
-}
-
-// get github app credentials from GitHub 
+// get github app credentials from GitHub
 //
 // route: GET /api/provider/github/app/callback
 func (h *GitHandler) CreateGithubAppCallback(c *echo.Context) error {
@@ -128,7 +121,7 @@ func (h *GitHandler) CreateGithubAppCallback(c *echo.Context) error {
 	state := c.QueryParam("state")
 
 	// validate the state
-	sData, err := query.GetRedirectSession(h.Ctx, state)
+	sData, err := query.GetRedirectSession(h.qCtx, state)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, lib.Res{Message: "Invalid state"})
 	}
@@ -168,7 +161,7 @@ func (h *GitHandler) CreateGithubAppCallback(c *echo.Context) error {
 	}
 
 	// store the app credentials in db
-	if err := query.CreateGithubApp(h.Ctx, db.CreateGithubAppParams{
+	if err := query.CreateGithubApp(h.qCtx, db.CreateGithubAppParams{
 		ID:             lib.NewID(),
 		AppID:          convRes.ID,
 		OrganizationID: sData.OrgID,
@@ -196,13 +189,13 @@ func (h *GitHandler) SetupGithubApp(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, lib.Res{Message: "Invalid installation ID"})
 	}
 
-	user, err := query.GetUserByEmail(h.Ctx, u.Email)
+	user, err := query.GetUserByEmail(h.qCtx, u.Email)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to setup github app"})
 	}
 
 	// varify installation ID
-	ghApp, err := query.GetGithubApp(h.Ctx, user.CurrentOrgID)
+	ghApp, err := query.GetGithubApp(h.qCtx, user.CurrentOrgID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to setup github app"})
 	}
@@ -224,7 +217,7 @@ func (h *GitHandler) SetupGithubApp(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, lib.Res{Message: "Invalid installation ID"})
 	}
 
-	if err := query.InsertInstallationID(h.Ctx, db.InsertInstallationIDParams{
+	if err := query.InsertInstallationID(h.qCtx, db.InsertInstallationIDParams{
 		InstallationID: sql.NullInt64{
 			Int64: instllation_id,
 			Valid: true,

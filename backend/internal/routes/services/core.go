@@ -10,13 +10,13 @@ import (
 type ServiceHandler struct {
 	Server   *config.Server
 	Validate *validator.Validate
-	Ctx      context.Context
+	qCtx      context.Context
 }
 
 func InitServiceHandlers(s *config.Server) *ServiceHandler{
 	return &ServiceHandler{
 		Server:   s,
 		Validate: validator.New(),
-		Ctx:      context.Background(),
+		qCtx:      context.Background(),
 	}
 }

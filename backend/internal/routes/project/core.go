@@ -10,13 +10,13 @@ import (
 type ProjectHandler struct {
 	Server   *config.Server
 	Validate *validator.Validate
-	Ctx      context.Context
+	qCtx      context.Context
 }
 
 func InitProjectHandlers(s *config.Server) *ProjectHandler{
 	return &ProjectHandler{
 		Server:   s,
 		Validate: validator.New(),
-		Ctx:      context.Background(),
+		qCtx:      context.Background(),
 	}
 }
