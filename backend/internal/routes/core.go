@@ -1,7 +1,7 @@
 package routes
 
 import (
-	ui "github.com/Roshan-anand/godploy/frontend"
+	ui "github.com/Roshan-anand/godploy"
 	"github.com/Roshan-anand/godploy/internal/config"
 	"github.com/Roshan-anand/godploy/internal/lib"
 	"github.com/Roshan-anand/godploy/internal/middleware"

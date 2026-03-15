@@ -9,6 +9,7 @@ import (
 
 	"github.com/Roshan-anand/godploy/internal/config"
 	"github.com/Roshan-anand/godploy/internal/routes"
+	"github.com/joho/godotenv"
 )
 
 // create and configure the server
@@ -61,6 +62,11 @@ func runServer(server *config.Server) error {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("No .env file found, loading environment variables from system")
+		return
+	}
 
 	server, err := createServer()
 	if err != nil {

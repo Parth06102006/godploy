@@ -22,9 +22,21 @@ func NewMiddlewares(s *config.Server) *Middlewares {
 	return &Middlewares{Server: s, Ctx: context.Background()}
 }
 
-// global middleware cors applicable to all routes
+// global middleware cors applicable to all routes.
+// in dev, AllowCredentials is required so the browser accepts cross-origin responses that set cookies.
 func (m *Middlewares) GlobalMiddlewareCors() echo.MiddlewareFunc {
-	return middleware.CORS(m.Server.Config.AllowedCors...)
+	isDev := m.Server.Config.AppEnv == "dev"
+
+	cfg := middleware.CORSConfig{
+		// AllowOrigins:     m.Server.Config.AllowedCors,
+		AllowCredentials: isDev,
+	}
+
+	if isDev {
+		cfg.AllowOrigins = m.Server.Config.AllowedCors
+	}
+
+	return middleware.CORSWithConfig(cfg)
 }
 
 // global middleware user applicable to all routes
@@ -84,7 +96,7 @@ func (m *Middlewares) GlobalMiddlewareUser(next echo.HandlerFunc) echo.HandlerFu
 		}
 
 		// check if path is /api/user
-		if c.Path() == "/api/auth/user"{
+		if c.Path() == "/api/auth/user" {
 			return next(c)
 		}
 

@@ -80,6 +80,16 @@ func generateSessionToken() (string, error) {
 	return base64.URLEncoding.EncodeToString(bt), nil
 }
 
+// cookieFlags returns Secure and SameSite values based on the app environment.
+// dev: SameSite=None + Secure=true (required by browsers for cross-origin cookies)
+// prod: SameSite=Lax + Secure=true (same-origin, standard secure setup)
+func cookieFlags(appEnv string) (secure bool, sameSite http.SameSite) {
+	if appEnv == "dev" {
+		return true, http.SameSiteNoneMode
+	}
+	return true, http.SameSiteLaxMode
+}
+
 // sets up session token
 func SetSessionCookies(s *config.Server, c *echo.Context, uId uuid.UUID) error {
 	sToken, err := generateSessionToken()
@@ -105,12 +115,17 @@ func SetSessionCookies(s *config.Server, c *echo.Context, uId uuid.UUID) error {
 		}
 	}()
 
+	secure, sameSite := cookieFlags(s.Config.AppEnv)
+
 	// set session token cookie
 	c.SetCookie(&http.Cookie{
-		Name:    s.Config.SessionTokenName,
-		Value:   sToken,
-		Expires: time.Now().Add(SESSION_DATA_EXPIRY_DAY),
-		Path:    "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: sameSite,
+		Name:     s.Config.SessionTokenName,
+		Value:    sToken,
+		Expires:  time.Now().Add(SESSION_DATA_EXPIRY_DAY),
+		Path:     "/",
 	})
 
 	return nil
@@ -124,11 +139,16 @@ func SetJwtCookie(s *config.Server, c *echo.Context, u AuthUser) error {
 		return fmt.Errorf("generate jwt error : %w", err)
 	}
 
+	secure, sameSite := cookieFlags(s.Config.AppEnv)
+
 	c.SetCookie(&http.Cookie{
-		Name:    s.Config.SessionDataName,
-		Value:   jwtStr,
-		Expires: time.Now().Add(JWT_EXPIRY_HOUR),
-		Path:    "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: sameSite,
+		Name:     s.Config.SessionDataName,
+		Value:    jwtStr,
+		Expires:  time.Now().Add(JWT_EXPIRY_HOUR),
+		Path:     "/",
 	})
 
 	return nil
