@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -14,13 +13,13 @@ type Config struct {
 	AllowedCors      []string
 	DbDir            string
 	AppEnv           string
+	WebUrl           string
 }
 
-func LoadConfig() *Config {
+func LoadConfig() (*Config, error) {
 	appEnv := os.Getenv("APP_ENV")
 	jwtSecrect := os.Getenv("JWT_SECRET")
-	fmt.Println("env : ", appEnv)
-	fmt.Println("env : ", jwtSecrect)
+	webUrl := os.Getenv("WEB_URL")
 
 	// TODO: load from env variable
 	return &Config{
@@ -32,5 +31,6 @@ func LoadConfig() *Config {
 		AllowedCors:      []string{"http://localhost:5173"},
 		DbDir:            "data",
 		AppEnv:           appEnv,
-	}
+		WebUrl:           webUrl,
+	}, nil
 }

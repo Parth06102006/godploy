@@ -24,7 +24,7 @@ build-web:
 build-bin:
 	cd backend && \
 	go mod tidy && \
-	go build -o ./bin/godploy cmd/main.go
+	go build -o ../bin/godploy cmd/main.go
 
 build: build-web build-bin
 
@@ -33,7 +33,7 @@ generate:
 	sqlc generate
 
 start: generate build
-	@cd backend && ./bin/godploy
+	@./bin/godploy
 
 reset:
 	rm -rf ./backend/data/*

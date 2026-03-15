@@ -1,7 +1,7 @@
 package routes
 
 import (
-	ui "github.com/Roshan-anand/godploy"
+	"github.com/Roshan-anand/godploy/frontend"
 	"github.com/Roshan-anand/godploy/internal/config"
 	"github.com/Roshan-anand/godploy/internal/lib"
 	"github.com/Roshan-anand/godploy/internal/middleware"
@@ -24,7 +24,7 @@ func SetupRoutes(srv *config.Server) (*echo.Echo, error) {
 	e := echo.New()
 
 	// initialize static file serving route
-	uiFs, err := ui.GetEmbedFS()
+	uiFs, err := frontend.GetEmbedFS()
 	if err != nil {
 		return nil, err
 	}

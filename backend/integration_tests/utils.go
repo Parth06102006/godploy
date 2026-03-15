@@ -20,7 +20,10 @@ import (
 // initialize a mock server for testing with config values suitable for testing
 func mockConfigServer() (*echo.Echo, *config.Server, error) {
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load config: %w", err)
+	}
 
 	// update config to include testing data
 	cfg.AllowedCors = []string{"*"}

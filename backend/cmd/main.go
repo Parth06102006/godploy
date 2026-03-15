@@ -15,7 +15,10 @@ import (
 // create and configure the server
 func createServer() (*config.Server, error) {
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
 
 	// create server instance
 	server, err := config.NewServer(cfg)
