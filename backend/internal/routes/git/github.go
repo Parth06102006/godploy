@@ -13,6 +13,7 @@ import (
 
 	"github.com/Roshan-anand/godploy/internal/db"
 	"github.com/Roshan-anand/godploy/internal/lib"
+	"github.com/google/go-github/v84/github"
 	"github.com/labstack/echo/v5"
 )
 
@@ -228,4 +229,43 @@ func (h *GitHandler) SetupGithubApp(c *echo.Context) error {
 	}
 
 	return c.Redirect(http.StatusFound, "http://localhost:8080/#/")
+}
+
+// installing github app
+//
+// route: GET /api/provider/github/repo/list
+func (h *GitHandler) GetGithubRepoList(c *echo.Context) error {
+	query := h.Server.DB.Queries
+	u := c.Get(h.Server.Config.EchoCtxUserKey).(lib.AuthUser)
+
+	user, err := query.GetUserByEmail(h.qCtx, u.Email)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
+	}
+
+	ghApp, err := query.GetGithubApp(h.qCtx, user.CurrentOrgID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
+	}
+
+	pem, err := lib.DecryptPEM(ghApp.PemKey)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
+	}
+
+	ghClient, err := lib.CreateGithubClient(context.Background(), ghApp.AppID, ghApp.InstallationID.Int64, []byte(pem))
+	if err != nil {
+		fmt.Println("create gh client error :", err)
+		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
+	}
+
+	repos, res, err := ghClient.Apps.ListRepos(h.ghCtx, &github.ListOptions{
+		Page: 1,
+	})
+	if err != nil {
+		fmt.Printf("GitHub API error: %v\nResponse: %v\n", err, res)
+		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
+	}
+
+	return c.JSON(http.StatusOK, repos)
 }

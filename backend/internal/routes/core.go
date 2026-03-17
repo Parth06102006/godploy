@@ -65,5 +65,6 @@ func SetupRoutes(srv *config.Server) (*echo.Echo, error) {
 	githubApi.GET("/app/create", gitH.CreateGithubApp)
 	githubApi.GET("/app/callback", gitH.CreateGithubAppCallback)
 	githubApi.GET("/app/setup", gitH.SetupGithubApp)
+	githubApi.GET("/repo/list", gitH.GetGithubRepoList)
 	return e, nil
 }
