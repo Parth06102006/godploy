@@ -26,10 +26,10 @@ Github App Manifest is used to create a Github App which does openrations on beh
     "name": "Octoapp",
     "url": "home page of the app",
     "hook_attributes": {
-      "url": "https://example.com/github/events"
+      "url": "https://app.com/github/events"
     },
-    "redirect_url": "https://example.com/path/to/redirect",
-		"setup_url": "http://example.com/path/to/setup",
+    "redirect_url": "https://app.com/path/to/redirect",
+		"setup_url": "http://app.com/path/to/setup",
     "public": true,
     "default_permissions": {
       "issues": "write",
@@ -71,7 +71,7 @@ Github App Manifest is used to create a Github App which does openrations on beh
     },
     "name": "Octocat App",
     "description": "",
-    "external_url": "https://example.com",
+    "external_url": "https://app.com",
     "html_url": "https://github.com/apps/octoapp",
     "created_at": "2017-07-08T16:18:44-04:00",
     "updated_at": "2017-07-08T16:18:44-04:00",
@@ -95,7 +95,7 @@ Github App Manifest is used to create a Github App which does openrations on beh
   ```
 - User approves, GitHub redirects to `setup_url`  
   ```
-  https://example.com/path/to/setup?installation_id=12345678
+  https://app.com/path/to/setup?installation_id=12345678
   ```
 - store installation_id in DB for future use.
 - use pem, app_id & installation_id with ghinstallation to create github client to make API openrations.

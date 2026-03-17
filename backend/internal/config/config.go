@@ -13,7 +13,6 @@ type Config struct {
 	AllowedCors      []string
 	DbDir            string
 	AppEnv           string
-	WebUrl           string
 }
 
 func LoadConfig() (*Config, error) {
@@ -28,9 +27,8 @@ func LoadConfig() (*Config, error) {
 		SessionTokenName: "godploy_session_token",
 		EchoCtxUserKey:   "user_email",
 		JwtSecret:        jwtSecrect,
-		AllowedCors:      []string{"http://localhost:5173"},
+		AllowedCors:      []string{webUrl},
 		DbDir:            "data",
 		AppEnv:           appEnv,
-		WebUrl:           webUrl,
 	}, nil
 }

@@ -10,18 +10,20 @@
 - [ ] setup CI/CD
 - [ ] setup linting and formatting
 - [x] write documentation
-- [ ] rememberMe functionality for login
 - [ ] setup monorepo
-- [ ] setup hot reloading in development
-- [ ] setup dev env for separate frontend
+- [x] setup hot reloading in development
+- [x] setup dev env for separate frontend
+- [ ] setup containerized dev env
 
-# enhancements
+## application
+- [ ] rememberMe functionality for login
+- [ ] tests for project lifecycle
+- [ ] tests for service lifecycle
+
+## enhancements
 - [ ] use dynamic imports in client side
 
-# Potential bugs
+## Potential bugs
 
 - [x] not using enums for column user.role in [sql](../sqlite/migrations/0001_init_schema.up.sql). **[ solved ]**
 - [ ] service data is stored in DB and deployed, but what if user remove the service from terminal. the data still exists.
-
-# extras 
-- [ ] write tests for project lifecycle
