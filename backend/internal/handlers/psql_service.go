@@ -1,18 +1,30 @@
-package serviceroutes
+package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/Roshan-anand/godploy/internal/config"
 	"github.com/Roshan-anand/godploy/internal/db"
 	"github.com/Roshan-anand/godploy/internal/lib"
-	ru "github.com/Roshan-anand/godploy/internal/routes/utils"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/moby/moby/api/types/mount"
 	"github.com/moby/moby/api/types/swarm"
 	"github.com/moby/moby/client"
 )
+
+type ServiceReq struct {
+	ServiceId uuid.UUID `json:"service_id" validate:"required"`
+}
+
+type ServiceHandler struct {
+	Server   *config.Server
+	Validate *validator.Validate
+	qCtx     context.Context
+}
 
 type CreatePsqlServiceReq struct {
 	ProjectID   uuid.UUID `json:"project_id" validate:"required"`
@@ -25,6 +37,14 @@ type CreatePsqlServiceReq struct {
 	Image       string    `json:"image" validate:"required"`
 }
 
+func InitServiceHandlers(s *config.Server) *ServiceHandler {
+	return &ServiceHandler{
+		Server:   s,
+		Validate: validator.New(),
+		qCtx:     context.Background(),
+	}
+}
+
 // create a new psql service
 //
 // route: POST /api/service/psql
@@ -32,7 +52,7 @@ func (h *ServiceHandler) CreatePsqlService(c *echo.Context) error {
 
 	b := new(CreatePsqlServiceReq)
 
-	if Res := ru.BindAndValidate(b, c, h.Validate); Res != nil {
+	if Res := BindAndValidate(b, c, h.Validate); Res != nil {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 
@@ -68,7 +88,7 @@ func (h *ServiceHandler) DeployPsqlService(c *echo.Context) error {
 
 	b := new(ServiceReq)
 
-	if Res := ru.BindAndValidate(b, c, h.Validate); Res != nil {
+	if Res := BindAndValidate(b, c, h.Validate); Res != nil {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 
@@ -153,7 +173,7 @@ func (h *ServiceHandler) StopPsqlService(c *echo.Context) error {
 
 	b := new(ServiceReq)
 
-	if Res := ru.BindAndValidate(b, c, h.Validate); Res != nil {
+	if Res := BindAndValidate(b, c, h.Validate); Res != nil {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 
@@ -178,7 +198,7 @@ func (h *ServiceHandler) DeletePsqlService(c *echo.Context) error {
 
 	b := new(ServiceReq)
 
-	if Res := ru.BindAndValidate(b, c, h.Validate); Res != nil {
+	if Res := BindAndValidate(b, c, h.Validate); Res != nil {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 

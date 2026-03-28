@@ -1,14 +1,16 @@
-package authroutes
+package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/Roshan-anand/godploy/internal/config"
 	"github.com/Roshan-anand/godploy/internal/db"
 	"github.com/Roshan-anand/godploy/internal/lib"
-	ru "github.com/Roshan-anand/godploy/internal/routes/utils"
 	"github.com/Roshan-anand/godploy/internal/types"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
 )
 
@@ -16,6 +18,12 @@ const (
 	MAX_PASS_COUNT = 15
 	MIN_PASS_COUNT = 8
 )
+
+type AuthHandler struct {
+	Server   *config.Server
+	Validate *validator.Validate
+	qCtx     context.Context
+}
 
 type RegisterReq struct {
 	Name     string `json:"name" validate:"required,min=3,max=50"`
@@ -34,6 +42,14 @@ type AuthRes struct {
 	Name    string            `json:"name"`
 	Email   string            `json:"email"`
 	Orgs    []db.Organization `json:"orgs"`
+}
+
+func InitAuthHandlers(s *config.Server) *AuthHandler {
+	return &AuthHandler{
+		Server:   s,
+		Validate: validator.New(),
+		qCtx:     context.Background(),
+	}
 }
 
 // check if user is authenticated
@@ -68,7 +84,7 @@ func (h *AuthHandler) AuthUser(c *echo.Context) error {
 func (h *AuthHandler) AppRegiter(c *echo.Context) error {
 	b := new(RegisterReq)
 
-	if Res := ru.BindAndValidate(b, c, h.Validate); Res != nil {
+	if Res := BindAndValidate(b, c, h.Validate); Res != nil {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 
@@ -138,7 +154,7 @@ func (h *AuthHandler) AppRegiter(c *echo.Context) error {
 func (h *AuthHandler) AppLogin(c *echo.Context) error {
 	b := new(LoginReq)
 
-	if Res := ru.BindAndValidate(b, c, h.Validate); Res != nil {
+	if Res := BindAndValidate(b, c, h.Validate); Res != nil {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 

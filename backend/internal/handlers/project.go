@@ -1,16 +1,23 @@
-package projectroutes
+package handlers
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/Roshan-anand/godploy/internal/config"
 	"github.com/Roshan-anand/godploy/internal/db"
 	"github.com/Roshan-anand/godploy/internal/lib"
-	ru "github.com/Roshan-anand/godploy/internal/routes/utils"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 )
+
+type ProjectHandler struct {
+	Server   *config.Server
+	Validate *validator.Validate
+	qCtx     context.Context
+}
 
 type CreateProjectReq struct {
 	Name  string    `json:"name" validate:"required,min=3"`
@@ -19,6 +26,27 @@ type CreateProjectReq struct {
 
 type DeleteProjectReq struct {
 	ID uuid.UUID `json:"id"`
+}
+
+func InitProjectHandlers(s *config.Server) *ProjectHandler {
+	return &ProjectHandler{
+		Server:   s,
+		Validate: validator.New(),
+		qCtx:     context.Background(),
+	}
+}
+
+func (h *ProjectHandler) GetOrg(c *echo.Context) error {
+	u := c.Get(h.Server.Config.EchoCtxUserKey).(lib.AuthUser)
+
+	orgs, err := h.Server.DB.Queries.GetAllOrg(h.qCtx, u.Email)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, lib.Res{
+			Message: "internal server error",
+		})
+	}
+
+	return c.JSON(http.StatusOK, orgs)
 }
 
 // check if user in part of the organization
@@ -42,7 +70,7 @@ func (h *ProjectHandler) CreateProject(c *echo.Context) error {
 	u := c.Get(h.Server.Config.EchoCtxUserKey).(lib.AuthUser)
 	b := new(CreateProjectReq)
 
-	if Res := ru.BindAndValidate(b, c, h.Validate); Res != nil {
+	if Res := BindAndValidate(b, c, h.Validate); Res != nil {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 
@@ -108,7 +136,7 @@ func (h *ProjectHandler) GetProjects(c *echo.Context) error {
 func (h *ProjectHandler) DeleteProject(c *echo.Context) error {
 	b := new(DeleteProjectReq)
 
-	if Res := ru.BindAndValidate(b, c, h.Validate); Res != nil {
+	if Res := BindAndValidate(b, c, h.Validate); Res != nil {
 		return c.JSON(http.StatusBadRequest, Res)
 	}
 

@@ -3,39 +3,14 @@ package routes
 import (
 	"github.com/Roshan-anand/godploy/frontend"
 	"github.com/Roshan-anand/godploy/internal/config"
-	"github.com/Roshan-anand/godploy/internal/lib"
+	"github.com/Roshan-anand/godploy/internal/handlers"
 	"github.com/Roshan-anand/godploy/internal/middleware"
-	authroutes "github.com/Roshan-anand/godploy/internal/routes/auth"
-	gitroutes "github.com/Roshan-anand/godploy/internal/routes/git"
-	healthroutes "github.com/Roshan-anand/godploy/internal/routes/health"
-
-	projectroutes "github.com/Roshan-anand/godploy/internal/routes/project"
-	serviceroutes "github.com/Roshan-anand/godploy/internal/routes/services"
 	"github.com/labstack/echo/v5"
 )
 
-type Handler struct {
-	health  *healthroutes.HealthHandler
-	auth    *authroutes.AuthHandler
-	service *serviceroutes.ServiceHandler
-	git     *gitroutes.GitHandler
-	project *projectroutes.ProjectHandler
-}
-
-func newHandeler(srv *config.Server) *Handler {
-	return &Handler{
-		health:  healthroutes.InitHealthHandlers(srv),
-		auth:    authroutes.InitAuthHandlers(srv),
-		service: serviceroutes.InitServiceHandlers(srv),
-		git:     gitroutes.InitGitHandlers(srv),
-		project: projectroutes.InitProjectHandlers(srv),
-	}
-
-}
-
 // setup all routes
 func SetupRoutes(srv *config.Server) (*echo.Echo, error) {
-	h := newHandeler(srv)
+	h := handlers.NewHandeler(srv)
 	m := middleware.NewMiddlewares(srv)
 	e := echo.New()
 
@@ -49,39 +24,34 @@ func SetupRoutes(srv *config.Server) (*echo.Echo, error) {
 	e.Use(m.GlobalMiddlewareCors())
 
 	// health check route
-	e.GET("/api/health", func(c *echo.Context) error {
-		if srv.DB == nil {
-			return c.JSON(500, lib.Res{Message: "database not initialized"})
-		}
-		return c.JSON(200, lib.Res{Message: "ok"})
-	})
+	e.GET("/api/health", h.Health.HealthCheck)
 
 	// initialize auth api routes
 	authApi := e.Group("/api/auth")
-	authApi.GET("/user", h.auth.AuthUser, m.GlobalMiddlewareUser)
-	authApi.POST("/register", h.auth.AppRegiter)
-	authApi.POST("/login", h.auth.AppLogin)
+	authApi.GET("/user", h.Auth.AuthUser, m.GlobalMiddlewareUser)
+	authApi.POST("/register", h.Auth.AppRegiter)
+	authApi.POST("/login", h.Auth.AppLogin)
 
 	// secured routes
 	api := e.Group("/api")
 	api.Use(m.GlobalMiddlewareUser)
 
 	projectApi := api.Group("/project")
-	projectApi.GET("", h.project.GetProjects)
-	projectApi.POST("", h.project.CreateProject)
-	projectApi.DELETE("", h.project.DeleteProject)
+	projectApi.GET("", h.Project.GetProjects)
+	projectApi.POST("", h.Project.CreateProject)
+	projectApi.DELETE("", h.Project.DeleteProject)
 
 	serviceApi := api.Group("/service")
-	serviceApi.POST("/psql", h.service.CreatePsqlService)
-	serviceApi.DELETE("/psql", h.service.DeletePsqlService)
-	serviceApi.POST("/psql/deploy", h.service.DeployPsqlService)
-	serviceApi.POST("/psql/stop", h.service.StopPsqlService)
+	serviceApi.POST("/psql", h.Service.CreatePsqlService)
+	serviceApi.DELETE("/psql", h.Service.DeletePsqlService)
+	serviceApi.POST("/psql/deploy", h.Service.DeployPsqlService)
+	serviceApi.POST("/psql/stop", h.Service.StopPsqlService)
 
-	githubApi := api.Group("/provider/github")
-	githubApi.GET("/app/create", h.git.CreateGithubApp)
-	githubApi.GET("/app/callback", h.git.CreateGithubAppCallback)
-	githubApi.GET("/app/setup", h.git.SetupGithubApp)
-	githubApi.GET("/repo/list", h.git.GetGithubRepoList)
+	ghApi := api.Group("/provider/github")
+	ghApi.GET("/app/create", h.Git.CreateGithubApp)
+	ghApi.GET("/app/callback", h.Git.CreateGithubAppCallback)
+	ghApi.GET("/app/setup", h.Git.SetupGithubApp)
+	ghApi.GET("/repo/list", h.Git.GetGithubRepoList)
 
 	return e, nil
 }

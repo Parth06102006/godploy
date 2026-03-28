@@ -7,8 +7,7 @@ import (
 	"testing"
 
 	"github.com/Roshan-anand/godploy/internal/db"
-	projectroutes "github.com/Roshan-anand/godploy/internal/routes/project"
-	serviceroutes "github.com/Roshan-anand/godploy/internal/routes/services"
+	"github.com/Roshan-anand/godploy/internal/handlers"
 )
 
 func TestPsqlOperation(t *testing.T) {
@@ -41,7 +40,7 @@ func TestPsqlOperation(t *testing.T) {
 
 	// route req body
 	p := new(db.CreateProjectRow)
-	r, err := h.Post(ts.URL+"/api/project", "application/json", reqBody(projectroutes.CreateProjectReq{Name: "test", OrgID: orgid}))
+	r, err := h.Post(ts.URL+"/api/project", "application/json", reqBody(handlers.CreateProjectReq{Name: "test", OrgID: orgid}))
 	if err != nil {
 		t.Fatal("err making request:", err)
 	}
@@ -59,8 +58,8 @@ func TestPsqlOperation(t *testing.T) {
 	rPsql := "/api/service/psql"
 
 	// route req body
-	rCreateBody := serviceroutes.CreatePsqlServiceReq{ProjectID: p.ID, Name: "test", AppName: "test", Description: "", DbName: "test", DbUser: "test", DbPassword: "test", Image: "postgres:16"}
-	rPsqlBody := serviceroutes.ServiceReq{}
+	rCreateBody := handlers.CreatePsqlServiceReq{ProjectID: p.ID, Name: "test", AppName: "test", Description: "", DbName: "test", DbUser: "test", DbPassword: "test", Image: "postgres:16"}
+	rPsqlBody := handlers.ServiceReq{}
 
 	// route res body
 	createBodyRes := new(db.PsqlService)

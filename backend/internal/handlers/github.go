@@ -1,4 +1,4 @@
-package gitroutes
+package handlers
 
 import (
 	"context"
@@ -11,11 +11,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Roshan-anand/godploy/internal/config"
 	"github.com/Roshan-anand/godploy/internal/db"
 	"github.com/Roshan-anand/godploy/internal/lib"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/go-github/v84/github"
 	"github.com/labstack/echo/v5"
 )
+
+type GitHandler struct {
+	Server   *config.Server
+	Validate *validator.Validate
+	qCtx     context.Context
+	ghCtx    context.Context
+}
 
 type GitHubCreateAppRes struct {
 	ID            int64  `json:"id"`
@@ -24,8 +33,17 @@ type GitHubCreateAppRes struct {
 	PEM           string `json:"pem"`
 }
 
-// TODO : replace localhost with config value actual URL
+func InitGitHandlers(s *config.Server) *GitHandler {
+	return &GitHandler{
+		Server:   s,
+		Validate: validator.New(),
+		qCtx:     context.Background(),
+		ghCtx:    context.Background(),
+	}
+}
 
+// TODO : replace localhost with config value actual URL
+//
 // get github app manifest data
 func getManifestData() (string, error) {
 	manifest := map[string]interface{}{

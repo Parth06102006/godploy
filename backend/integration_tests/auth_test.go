@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	authroutes "github.com/Roshan-anand/godploy/internal/routes/auth"
+	"github.com/Roshan-anand/godploy/internal/handlers"
 )
 
 func TestUserLogin(t *testing.T) {
@@ -14,12 +14,12 @@ func TestUserLogin(t *testing.T) {
 	rLogin := "/api/auth/login"
 	rRegister := "/api/auth/register"
 
-	loginReq := authroutes.LoginReq{
+	loginReq := handlers.LoginReq{
 		Email:    "test@test.com",
 		Password: "testtest",
 	}
 
-	registerReq := authroutes.RegisterReq{
+	registerReq := handlers.RegisterReq{
 		Name:     "test",
 		Email:    "test@test.com",
 		Password: "testtest",

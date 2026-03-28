@@ -12,8 +12,8 @@ import (
 
 	"github.com/Roshan-anand/godploy/internal/config"
 	"github.com/Roshan-anand/godploy/internal/db"
+	"github.com/Roshan-anand/godploy/internal/handlers"
 	"github.com/Roshan-anand/godploy/internal/routes"
-	authroutes "github.com/Roshan-anand/godploy/internal/routes/auth"
 	"github.com/labstack/echo/v5"
 )
 
@@ -68,10 +68,10 @@ func mockDbConnection() (*db.Queries, error) {
 }
 
 // mock a new logined user
-func mockUserRejister(url string, h *http.Client, cfg *config.Config) (*authroutes.AuthRes, error) {
+func mockUserRejister(url string, h *http.Client, cfg *config.Config) (*handlers.AuthRes, error) {
 	rRegister := "/api/auth/register"
 
-	registerReq := authroutes.RegisterReq{
+	registerReq := handlers.RegisterReq{
 		Name:     "test",
 		Email:    "test@test.com",
 		Password: "testtest",
@@ -91,7 +91,7 @@ func mockUserRejister(url string, h *http.Client, cfg *config.Config) (*authrout
 		return nil, fmt.Errorf("expected cookies not found in response")
 	}
 
-	body := new(authroutes.AuthRes)
+	body := new(handlers.AuthRes)
 	if err := readAndUnmarshl(r.Body, body); err != nil {
 		return nil, fmt.Errorf("err reading response body: %v", err)
 	}

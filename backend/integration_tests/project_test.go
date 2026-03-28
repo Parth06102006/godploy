@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/Roshan-anand/godploy/internal/db"
-	projectroutes "github.com/Roshan-anand/godploy/internal/routes/project"
+	"github.com/Roshan-anand/godploy/internal/handlers"
 	"github.com/google/uuid"
 )
 
@@ -54,8 +54,8 @@ func TestProjectOperations(t *testing.T) {
 	rProject := "/api/project"
 
 	// route req body
-	rCreateBody := projectroutes.CreateProjectReq{Name: "test", OrgID: orgid}
-	rDeletBody := projectroutes.DeleteProjectReq{}
+	rCreateBody := handlers.CreateProjectReq{Name: "test", OrgID: orgid}
+	rDeletBody := handlers.DeleteProjectReq{}
 
 	// route res body
 	createBodyRes := new(db.CreateProjectRow)
