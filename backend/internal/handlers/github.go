@@ -16,6 +16,7 @@ import (
 	"github.com/Roshan-anand/godploy/internal/lib"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/go-github/v84/github"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 )
 
@@ -41,46 +42,6 @@ func InitGitHandlers(s *config.Server) *GitHandler {
 		ghCtx:    context.Background(),
 	}
 }
-
-// TODO : replace localhost with config value actual URL
-//
-// get github app manifest data
-func getManifestData() (string, error) {
-	manifest := map[string]interface{}{
-		"name": "GODPLOY",
-		"url":  "http://localhost:8080",
-		"hook_attributes": map[string]string{
-			"url": "https://example.com/github/events", // TODO : replace with webhook endpoint URL
-		},
-		"redirect_url": "http://localhost:8080/api/provider/github/app/callback",
-		// "callback_urls": []string{"http://localhost:8080/api/provider/github/app/callback"},
-		"setup_url": "http://localhost:8080/api/provider/github/app/setup",
-		"public":    true,
-		"default_permissions": map[string]string{
-			"contents": "read",
-			"metadata": "read",
-		},
-		"default_events": []string{"push"},
-	}
-
-	manifestDataB, err := json.Marshal(manifest)
-	if err != nil {
-		return "", err
-	}
-
-	return string(manifestDataB), nil
-}
-
-// auto-submitting form template — POST to GitHub with manifest in body (required by GitHub manifest flow)
-const githubManifestFormTmpl = `<!DOCTYPE html>
-<html>
-<body>
-  <form id="mf" action="https://github.com/settings/apps/new?state={{.State}}" method="POST">
-    <input type="hidden" name="manifest" value="{{.Manifest}}">
-  </form>
-  <script>document.getElementById("mf").submit();</script>
-</body>
-</html>`
 
 // initiate github app creation
 //
@@ -219,13 +180,8 @@ func (h *GitHandler) SetupGithubApp(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to setup github app"})
 	}
 
-	pem, err := lib.DecryptPEM(ghApp.PemKey)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to setup github app"})
-	}
-
 	// use app-level client (JWT auth) — GetInstallation requires JWT, not installation token
-	appClient, err := lib.CreateAppClient(ghApp.AppID, []byte(pem))
+	appClient, err := lib.CreateAppClient(ghApp.AppID, ghApp.PemKey)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to setup github app"})
 	}
@@ -249,39 +205,31 @@ func (h *GitHandler) SetupGithubApp(c *echo.Context) error {
 	return c.Redirect(http.StatusFound, "http://localhost:8080/#/")
 }
 
-// installing github app
+// get list of repos accessible by the github app
 //
-// route: GET /api/provider/github/repo/list
+// route: GET /api/provider/github/repo/list?org_id=
 func (h *GitHandler) GetGithubRepoList(c *echo.Context) error {
 	query := h.Server.DB.Queries
-	u := c.Get(h.Server.Config.EchoCtxUserKey).(lib.AuthUser)
 
-	user, err := query.GetUserByEmail(h.qCtx, u.Email)
+	org_id, err := uuid.Parse(c.QueryParam("org_id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, lib.Res{Message: "Invalid organization ID"})
+	}
+
+	ghApp, err := query.GetGithubApp(h.qCtx, org_id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
 	}
 
-	ghApp, err := query.GetGithubApp(h.qCtx, user.CurrentOrgID)
+	ghClient, err := lib.CreateGithubClient(context.Background(), ghApp.AppID, ghApp.InstallationID.Int64, ghApp.PemKey)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
 	}
 
-	pem, err := lib.DecryptPEM(ghApp.PemKey)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
-	}
-
-	ghClient, err := lib.CreateGithubClient(context.Background(), ghApp.AppID, ghApp.InstallationID.Int64, []byte(pem))
-	if err != nil {
-		fmt.Println("create gh client error :", err)
-		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
-	}
-
-	repos, res, err := ghClient.Apps.ListRepos(h.ghCtx, &github.ListOptions{
+	repos, _, err := ghClient.Apps.ListRepos(h.ghCtx, &github.ListOptions{
 		Page: 1,
 	})
 	if err != nil {
-		fmt.Printf("GitHub API error: %v\nResponse: %v\n", err, res)
 		return c.JSON(http.StatusInternalServerError, lib.Res{Message: "Failed to get github repos"})
 	}
 

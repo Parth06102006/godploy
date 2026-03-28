@@ -11,7 +11,13 @@ import (
 // CreateGithubClient creates an installation-scoped GitHub client.
 // Used for repo operations (list repos, clone, etc.) scoped to a specific installation.
 // Automatically handles JWT → installation token exchange and refresh.
-func CreateGithubClient(ctx context.Context, appID int64, installationID int64, pemKey []byte) (*github.Client, error) {
+func CreateGithubClient(ctx context.Context, appID int64, installationID int64, hashPem string) (*github.Client, error) {
+
+	pemKey, err := DecryptPEM(hashPem)
+	if err != nil {
+		return nil, err
+	}
+
 	itr, err := ghinstallation.New(
 		http.DefaultTransport,
 		appID,
@@ -29,7 +35,13 @@ func CreateGithubClient(ctx context.Context, appID int64, installationID int64, 
 // CreateAppClient creates an app-level GitHub client authenticated as the GitHub App itself (JWT).
 // Required for app-level API calls like GetInstallation, ListInstallations — these endpoints
 // only accept a JWT, not an installation access token.
-func CreateAppClient(appID int64, pemKey []byte) (*github.Client, error) {
+func CreateAppClient(appID int64, hashPem string) (*github.Client, error) {
+
+	pemKey, err := DecryptPEM(hashPem)
+	if err != nil {
+		return nil, err
+	}
+	
 	itr, err := ghinstallation.NewAppsTransport(
 		http.DefaultTransport,
 		appID,
