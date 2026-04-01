@@ -8,7 +8,7 @@ Lightweight, single-binary, self-hosted alternative to Dokploy, Coolify.
 - **Runtime:** Docker
 - **Ingress:** Traefik
 - **DB:** SQLite (metadata)
-- **UI:** Vue (SPA, served from binary)
+- **UI:** sveltekit (SPA, served from binary)
 
 ## current status ` Basic Setup `
 

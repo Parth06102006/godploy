@@ -20,13 +20,13 @@ Godploy aims to be the middle ground — a minimal, easy-to-run tool that handle
 | Layer       | Technology                          |
 | ----------- | ----------------------------------- |
 | Server      | Go (Echo framework)                 |
-| Frontend    | Vue 3 SPA (embedded into the binary)|
+| Frontend    | sveltekit SPA (embedded into the binary)|
 | Database    | SQLite (metadata only, via sqlc)    |
 | Runtime     | Docker (container lifecycle)        |
 | Ingress     | Traefik (routing, TLS, subdomains)  |
 | Auth        | JWT + session-based                 |
 
-The Vue frontend is compiled and embedded into the Go binary at build time — so the final output is a single executable with no external dependencies beyond Docker and Traefik.
+The sveltekit frontend is compiled and embedded into the Go binary at build time — so the final output is a single executable with no external dependencies beyond Docker and Traefik.
 
 ## Architecture at a Glance
 
@@ -36,7 +36,7 @@ User Browser
 [ Traefik ] ← handles TLS, domain routing
     ↓
 [ Godploy Binary ]
-  ├── Vue SPA (embedded static files)
+  ├── sveltekit SPA (embedded static files)
   ├── REST API (Echo)
   ├── SQLite (users, orgs, projects, services, sessions)
   └── Docker Client (build, run, manage containers)
@@ -88,7 +88,7 @@ Shell scripts to install/setup Godploy + Traefik on a fresh server, and to clean
 - SQLite schema covers users, orgs, projects, services, sessions
 - Basic API structure with Echo
 - Traefik config is in staging
-- Vue frontend is scaffolded
+- sveltekit frontend is scaffolded
 
 ---
 

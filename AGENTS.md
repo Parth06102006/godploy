@@ -4,13 +4,13 @@
 
 **Godploy** is a lightweight, single-binary, self-hosted PaaS (Platform as a Service) — an alternative to Dokploy and Coolify.
 more information available in ./docs/prd.md (only read if you are nto aware of the project context)
-**Stack:** Go (Echo) · Vue 3 SPA (embedded in binary) · SQLite (via sqlc) · Docker · Traefik
+**Stack:** Go (Echo) · sveltekit SPA (embedded in binary) · SQLite (via sqlc) · Docker · Traefik
 
 **Structure:**
 
 - `cmd/` — entrypoint
 - `internal/` — server config, routes, middleware, DB queries, lib utilities
-- `frontend/` — Vue SPA (embedded at build time)
+- `frontend/` — sveltekit (embedded at build time)
 - `sqlite/` — migrations and SQL queries (used by sqlc to generate Go code)
 - `dynamic/` — Traefik configuration
 - `docs/` — project documentation

@@ -14,7 +14,7 @@
 - [x] setup hot reloading in development
 - [x] setup dev env for separate frontend
 - [ ] setup containerized dev env
-- [ ] migrate UI from vue to svelte
+- [x] migrate UI from vue to svelte
 
 ## application
 - [ ] rememberMe functionality for login
